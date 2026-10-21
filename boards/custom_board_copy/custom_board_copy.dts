@@ -18,8 +18,9 @@
 	compatible = "nxp,mcxa156", "nxp,mcx";
 
 	aliases {
-		led0 = &red_led;
-		led1 = &green_led;
+		/* led0 and led1 are swapped compared to the original */
+		led0 = &green_led;
+		led1 = &red_led;
 		led2 = &blue_led;
 		sw0 = &user_button_2;
 		sw1 = &user_button_3;
