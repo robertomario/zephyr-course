@@ -1,0 +1,6 @@
+board:
+  name: custom_board_scratch
+  full_name: my_custom_board_scratch_method
+  vendor: custom
+  socs:
+  - name: mcxa156

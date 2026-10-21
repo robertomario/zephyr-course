@@ -1,0 +1,2 @@
+config BOARD_CUSTOM_BOARD_SCRATCH
+    select SOC_MCXA156
