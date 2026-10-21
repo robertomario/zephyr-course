@@ -1,47 +1,100 @@
 /dts-v1/;
-#include <nxp/mcx/mcxa/nxp_mcxa156.dtsi>
-#include "custom_board_scratch-pinctrl.dtsi"
+#include <st/f4/stm32f429Xi.dtsi>
+#include <st/f4/stm32f429zitx-pinctrl.dtsi>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
+
 / {
     model = "custom_board_scratch";
     compatible = "custom,custom_board_scratch";
     chosen {
-        zephyr,flash = &flash;
-        zephyr,flash-controller = &fmu;
+        zephyr,flash = &flash0;
         zephyr,sram = &sram0; /* Point to regular RAM */
         zephyr,code-partition = &slot0_partition; /* Regular application slot */
+        zephyr,console = &usart3;
+		zephyr,shell-uart = &usart3;
     };
 };
 
-&flash {
+&clk_lsi {
+	status = "okay";
+};
+
+&clk_hse {
+	hse-bypass;
+	clock-frequency = <DT_FREQ_M(8)>; /* STLink 8MHz clock */
+	status = "okay";
+};
+
+&pll {
+	div-m = <8>;
+	mul-n = <336>;
+	div-p = <2>;
+	div-q = <7>;
+	clocks = <&clk_hse>;
+	status = "okay";
+};
+
+&rcc {
+	clocks = <&pll>;
+	clock-frequency = <DT_FREQ_M(168)>; /* highest value to get a precise USB clock */
+	ahb-prescaler = <1>;
+	apb1-prescaler = <4>;
+	apb2-prescaler = <2>;
+};
+
+&usart3 {
+	pinctrl-0 = <&usart3_tx_pd8 &usart3_rx_pd9>;
+	pinctrl-names = "default";
+	current-speed = <115200>;
+	status = "okay";
+};
+
+&flash0 {
 	partitions {
-		compatible = "fixed-partitions";
 		#address-cells = <1>;
 		#size-cells = <1>;
+		ranges;
 
+		/* 32KB for bootloader */
 		boot_partition: partition@0 {
+			compatible = "zephyr,mapped-partition";
 			label = "mcuboot";
-			reg = <0x00000000 DT_SIZE_K(64)>;
+			reg = <0x00000000 DT_SIZE_K(32)>;
 			read-only;
 		};
 
-		slot0_partition: partition@10000 {
+		/*
+		 * nvs subsystem requires 2 sectors with a max total of 32K
+		 * On F4 series, the only option is to use the following
+		 * partition, which is compatible with mcuboot usage.
+		 * Keep it commented in order it is not used by CI.
+		 *
+		 * storage_partition: partition@8000 {
+		 *	compatible = "zephyr,mapped-partition";
+		 *	label = "storage";
+		 *	reg = <0x0008000 DT_SIZE_K(32)>;
+		 * };
+		 */
+
+		/* application image slot: 256KB */
+		slot0_partition: partition@20000 {
+			compatible = "zephyr,mapped-partition";
 			label = "image-0";
-			reg = <0x00010000 DT_SIZE_K(424)>;
+			reg = <0x00020000 DT_SIZE_K(256)>;
 		};
 
-		slot1_partition: partition@7a000 {
+		/* backup slot: 256KB */
+		slot1_partition: partition@60000 {
+			compatible = "zephyr,mapped-partition";
 			label = "image-1";
-			reg = <0x0007a000 DT_SIZE_K(424)>;
+			reg = <0x00060000 DT_SIZE_K(256)>;
 		};
 
-		storage_partition: partition@e4000 {
-			label = "storage";
-			reg = <0x000e4000 DT_SIZE_K(112)>;
+		/* swap slot: 128KB */
+		scratch_partition: partition@a0000 {
+			compatible = "zephyr,mapped-partition";
+			label = "image-scratch";
+			reg = <0x000a0000 DT_SIZE_K(128)>;
 		};
 	};
-};
-
-&cpu0 {
-	clock-frequency = <96000000>;
 };

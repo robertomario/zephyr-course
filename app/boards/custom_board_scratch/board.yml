@@ -3,4 +3,4 @@ board:
   full_name: my_custom_board_scratch_method
   vendor: custom
   socs:
-  - name: mcxa156
+  - name: stm32f429xx

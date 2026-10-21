@@ -1,2 +1,2 @@
 config BOARD_CUSTOM_BOARD_SCRATCH
-    select SOC_MCXA156
+    select SOC_STM32F429XX
